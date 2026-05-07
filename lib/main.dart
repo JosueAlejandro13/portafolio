@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 void main() {
   runApp(const PortfolioWeb());
@@ -595,18 +596,46 @@ class _ProjectsSection extends StatelessWidget {
           childAspectRatio: childAspectRatio,
           children: [
             _ProjectCard(
-              title: 'App de Ecommerce',
+              title: 'App Mark (Rutas GPS)',
               description:
-                  'Plataforma completa de ventas con pasarela de pagos integrada y panel de administración en tiempo real.',
-              tags: const ['Flutter', 'Firebase', 'PHP'],
+                  'Plataforma para trazado y seguimiento de rutas por GPS en tiempo real.',
+              tags: const ['Flutter', 'Firebase', 'Android'],
               imageColor: Colors.blueAccent.withOpacity(0.2),
+              githubUrl: 'https://github.com/JosueAlejandro13',
             ),
             _ProjectCard(
-              title: 'Gestor de Tareas Pro',
+              title: 'Manager Web Platform',
               description:
-                  'Aplicación de productividad con soporte offline, notificaciones locales y sincronización en la nube.',
-              tags: const ['Android', 'Swift', 'GitHub'],
+                  'Plataforma administrativa web para gestión de datos de la aplicación Flutter.',
+              tags: const ['PHP', 'JS', 'HTML', 'CSS'],
+              imageColor: Colors.orangeAccent.withOpacity(0.2),
+              githubUrl: 'https://github.com/JosueAlejandro13',
+            ),
+            _ProjectCard(
+              title: 'Consultorio PH Web',
+              description:
+                  'Página web profesional e informativa para un consultorio médico moderno.',
+              tags: const ['HTML', 'CSS', 'JS', 'Tailwind'],
+              imageColor: Colors.tealAccent.withOpacity(0.2),
+              url: 'https://anaisph.github.io/',
+              imagePath: 'assets/Consultorio.png',
+              githubUrl: 'https://github.com/AnaisPH/AnaisPH.github.io',
+            ),
+            _ProjectCard(
+              title: 'App Consultorio PH',
+              description:
+                  'Aplicación móvil multiplataforma para programar y administrar citas en el consultorio.',
+              tags: const ['Flutter', 'Firebase', 'Android', 'iOS'],
+              imageColor: Colors.pinkAccent.withOpacity(0.2),
+              githubUrl: 'https://github.com/JosueAlejandro13/phmov',
+            ),
+            _ProjectCard(
+              title: 'App de Películas',
+              description:
+                  'Aplicación móvil orientada a descubrir las tendencias actuales del cine mediante integración de servicios.',
+              tags: const ['Flutter', 'API REST'],
               imageColor: Colors.purpleAccent.withOpacity(0.2),
+              githubUrl: 'https://github.com/JosueAlejandro13/PruebaT',
             ),
           ].animate(interval: 200.ms).fade(duration: 800.ms).slideX(begin: 0.1),
         );
@@ -620,12 +649,18 @@ class _ProjectCard extends StatefulWidget {
   final String description;
   final List<String> tags;
   final Color imageColor;
+  final String? url;
+  final String? imagePath;
+  final String? githubUrl;
 
   const _ProjectCard({
     required this.title,
     required this.description,
     required this.tags,
     required this.imageColor,
+    this.url,
+    this.imagePath,
+    this.githubUrl,
   });
 
   @override
@@ -640,6 +675,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
+      cursor: SystemMouseCursors.basic,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
@@ -671,10 +707,17 @@ class _ProjectCardState extends State<_ProjectCard> {
                 flex: 3,
                 child: Container(
                   color: widget.imageColor,
-                  child: Center(
-                    child: Icon(Icons.image_outlined,
-                        size: 60, color: Colors.white.withOpacity(0.3)),
-                  ),
+                  child: widget.imagePath != null
+                      ? Image.asset(
+                          widget.imagePath!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        )
+                      : Center(
+                          child: Icon(Icons.image_outlined,
+                              size: 60, color: Colors.white.withOpacity(0.3)),
+                        ),
                 ),
               ),
               Expanded(
@@ -730,6 +773,35 @@ class _ProjectCardState extends State<_ProjectCard> {
                             ),
                           );
                         }).toList(),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          if (widget.url != null)
+                            _ProjectActionButton(
+                              icon: Icons.visibility_outlined,
+                              label: 'Ver',
+                              onTap: () async {
+                                final uri = Uri.parse(widget.url!);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri);
+                                }
+                              },
+                            ),
+                          if (widget.githubUrl != null) ...[
+                            const SizedBox(width: 12),
+                            _ProjectActionButton(
+                              icon: FontAwesomeIcons.github,
+                              label: 'GitHub',
+                              onTap: () async {
+                                final uri = Uri.parse(widget.githubUrl!);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri);
+                                }
+                              },
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -871,62 +943,27 @@ class _ContactItem extends StatelessWidget {
 class _ContactForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _CustomTextField(hintText: 'Tu Nombre'),
-        const SizedBox(height: 16),
-        _CustomTextField(hintText: 'Tu Correo'),
-        const SizedBox(height: 16),
-        _CustomTextField(hintText: 'Mensaje', maxLines: 4),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-            child: const Text('Enviar Mensaje',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          shape: BoxShape.circle,
         ),
-      ],
+        child: const Icon(
+          Icons.flutter_dash,
+          size: 200,
+          color: Colors.blue,
+        ),
+      )
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .moveY(begin: -15, end: 15, duration: 2.seconds, curve: Curves.easeInOut)
+          .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.05, 1.05), duration: 2.seconds, curve: Curves.easeInOut),
     );
   }
 }
 
-class _CustomTextField extends StatelessWidget {
-  final String hintText;
-  final int maxLines;
 
-  const _CustomTextField({required this.hintText, this.maxLines = 1});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: const TextStyle(color: Colors.white38),
-        filled: true,
-        fillColor: const Color(0xFF151B2B),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-        ),
-      ),
-    );
-  }
-}
 
 class _Footer extends StatelessWidget {
   @override
@@ -984,6 +1021,37 @@ class _HoverCardState extends State<_HoverCard> {
         duration: const Duration(milliseconds: 200),
         transform: Matrix4.identity()..scale(isHovered ? 1.05 : 1.0),
         child: widget.child,
+      ),
+    );
+  }
+}
+
+class _ProjectActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ProjectActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+        ),
       ),
     );
   }
