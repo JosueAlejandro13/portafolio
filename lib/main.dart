@@ -312,10 +312,11 @@ class _HeroSection extends StatelessWidget {
             shape: BoxShape.circle,
             color: Color(0xFF0B0F19), // Fondo interno
           ),
-          child: const Center(
-            child: Icon(Icons.person, size: 120, color: Colors.white54),
-            // TODO: Cambia este Icon por tu foto usando:
-            // child: ClipOval(child: Image.asset('assets/mi_foto.jpg', fit: BoxFit.cover)),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/avatar.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),
