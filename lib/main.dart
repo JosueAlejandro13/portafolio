@@ -13,10 +13,11 @@ class PortfolioWeb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mi Portafolio Web',
+      title: 'JAHC',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0B0F19), // Dark sleek background
+        scaffoldBackgroundColor:
+            const Color(0xFF0B0F19), // Dark sleek background
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF00F0FF), // Neon cyan
           brightness: Brightness.dark,
@@ -39,9 +40,23 @@ class PortfolioHomePage extends StatefulWidget {
 
 class _PortfolioHomePageState extends State<PortfolioHomePage> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _experienceKey = GlobalKey();
+  final GlobalKey _techKey = GlobalKey();
+  final GlobalKey _projectsKey = GlobalKey();
 
   void _scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(seconds: 1), curve: Curves.easeInOut);
+    _scrollController.animateTo(0,
+        duration: const Duration(seconds: 1), curve: Curves.easeInOut);
+  }
+
+  void _scrollToSection(GlobalKey key) {
+    if (key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(seconds: 1),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -71,9 +86,15 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
             actions: isDesktop
                 ? [
                     _NavBarItem(title: 'Inicio', onTap: _scrollToTop),
-                    _NavBarItem(title: 'Experiencia', onTap: () {}),
-                    _NavBarItem(title: 'Tecnologías', onTap: () {}),
-                    _NavBarItem(title: 'Proyectos', onTap: () {}),
+                    _NavBarItem(
+                        title: 'Experiencia',
+                        onTap: () => _scrollToSection(_experienceKey)),
+                    _NavBarItem(
+                        title: 'Tecnologías',
+                        onTap: () => _scrollToSection(_techKey)),
+                    _NavBarItem(
+                        title: 'Proyectos',
+                        onTap: () => _scrollToSection(_projectsKey)),
                     const SizedBox(width: 40),
                   ]
                 : [],
@@ -87,16 +108,19 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
             _HeroSection(isDesktop: isDesktop),
             const SizedBox(height: 100),
             _SectionContainer(
+              key: _experienceKey,
               title: 'Experiencia Profesional',
               child: _ExperienceSection(isDesktop: isDesktop),
             ),
             const SizedBox(height: 120),
             _SectionContainer(
+              key: _techKey,
               title: 'Tecnologías que Domino',
               child: _TechnologiesSection(isDesktop: isDesktop),
             ),
             const SizedBox(height: 120),
             _SectionContainer(
+              key: _projectsKey,
               title: 'Proyectos Destacados',
               child: _ProjectsSection(isDesktop: isDesktop),
             ),
@@ -142,7 +166,8 @@ class _SectionContainer extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _SectionContainer({required this.title, required this.child});
+  const _SectionContainer(
+      {super.key, required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -157,14 +182,11 @@ class _SectionContainer extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            )
-                .animate()
-                .fade(duration: 600.ms)
-                .slideY(begin: 0.2)
-                .shimmer(delay: 500.ms, duration: 1000.ms, color: Colors.white24),
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+            ).animate().fade(duration: 600.ms).slideY(begin: 0.2).shimmer(
+                delay: 500.ms, duration: 1000.ms, color: Colors.white24),
             const SizedBox(height: 8),
             Container(
               height: 4,
@@ -173,7 +195,9 @@ class _SectionContainer extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(2),
               ),
-            ).animate().scaleX(begin: 0, duration: 600.ms, curve: Curves.easeOut),
+            )
+                .animate()
+                .scaleX(begin: 0, duration: 600.ms, curve: Curves.easeOut),
             const SizedBox(height: 40),
             child,
           ],
@@ -191,7 +215,8 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Column(
-      crossAxisAlignment: isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment:
+          isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
@@ -199,7 +224,8 @@ class _HeroSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+            border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
           ),
           child: Text(
             'Disponible para nuevos proyectos',
@@ -211,13 +237,13 @@ class _HeroSection extends StatelessWidget {
         ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
         const SizedBox(height: 24),
         Text(
-          'Construyendo\nExperiencias',
+          'Alejandro Hernández',
           style: Theme.of(context).textTheme.displayLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-            height: 1.1,
-            color: Colors.white,
-            fontSize: isDesktop ? 80 : 56,
-          ),
+                fontWeight: FontWeight.w900,
+                height: 1.1,
+                color: Colors.white,
+                fontSize: isDesktop ? 80 : 56,
+              ),
           textAlign: isDesktop ? TextAlign.left : TextAlign.center,
         ).animate().fade(delay: 400.ms).slideY(begin: 0.2),
         const SizedBox(height: 16),
@@ -234,23 +260,28 @@ class _HeroSection extends StatelessWidget {
         const SizedBox(height: 32),
         ElevatedButton.icon(
           onPressed: () async {
-            const url = 'https://drive.google.com/file/d/11q1RIElbN9IzIITODxjgntz3cA7zrjlu/view?usp=sharing'; // Pega aquí tu link de Drive
+            const url =
+                'https://drive.google.com/file/d/11q1RIElbN9IzIITODxjgntz3cA7zrjlu/view?usp=sharing'; // Pega aquí tu link de Drive
             final uri = Uri.parse(url);
             if (await canLaunchUrl(uri)) {
               await launchUrl(uri);
             }
           },
           icon: const Icon(Icons.download_rounded),
-          label: const Text('Descargar CV', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          label: const Text('Descargar CV',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.black,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 10,
             shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
           ),
-        ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(begin: 1, end: 1.05, duration: 1000.ms),
+        )
+            .animate(onPlay: (controller) => controller.repeat(reverse: true))
+            .scaleXY(begin: 1, end: 1.05, duration: 1000.ms),
       ],
     );
 
@@ -288,7 +319,11 @@ class _HeroSection extends StatelessWidget {
           ),
         ),
       ),
-    ).animate().fade(delay: 800.ms).scale(begin: const Offset(0.8, 0.8)).shimmer(duration: 2000.ms);
+    )
+        .animate()
+        .fade(delay: 800.ms)
+        .scale(begin: const Offset(0.8, 0.8))
+        .shimmer(duration: 2000.ms);
 
     return Container(
       width: double.infinity,
@@ -413,9 +448,9 @@ class _StatWidget extends StatelessWidget {
           Text(
             number,
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -440,9 +475,17 @@ class _TechnologiesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final techList = [
-      {'name': 'Flutter', 'icon': Icons.flutter_dash, 'color': Colors.lightBlue},
+      {
+        'name': 'Flutter',
+        'icon': Icons.flutter_dash,
+        'color': Colors.lightBlue
+      },
       {'name': 'Dart', 'icon': Icons.code, 'color': Colors.blueAccent},
-      {'name': 'Firebase', 'icon': Icons.local_fire_department, 'color': Colors.orange},
+      {
+        'name': 'Firebase',
+        'icon': Icons.local_fire_department,
+        'color': Colors.orange
+      },
       {'name': 'PHP', 'icon': Icons.php, 'color': Colors.indigoAccent},
       {'name': 'Android', 'icon': Icons.android, 'color': Colors.green},
       {'name': 'Swift', 'icon': Icons.apple, 'color': Colors.orangeAccent},
@@ -450,39 +493,82 @@ class _TechnologiesSection extends StatelessWidget {
     ];
 
     return Wrap(
-      spacing: 20,
-      runSpacing: 20,
+      spacing: 24,
+      runSpacing: 24,
       alignment: WrapAlignment.center,
-      children: techList.map((tech) {
-        return _HoverCard(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF151B2B),
-              borderRadius: BorderRadius.circular(100),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(tech['icon'] as IconData, color: tech['color'] as Color, size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  tech['name'] as String,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList()
+      children: techList
+          .map((tech) {
+            return _HoverCard(
+              child: _TechWidget(
+                name: tech['name'] as String,
+                icon: tech['icon'] as IconData,
+                color: tech['color'] as Color,
+                isDesktop: isDesktop,
+              ),
+            );
+          })
+          .toList()
           .animate(interval: 100.ms)
           .fade(duration: 500.ms)
           .scale(curve: Curves.easeOutBack),
+    );
+  }
+}
+
+class _TechWidget extends StatelessWidget {
+  final String name;
+  final IconData icon;
+  final Color color;
+  final bool isDesktop;
+
+  const _TechWidget({
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.isDesktop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: isDesktop ? 260 : 160,
+      padding: EdgeInsets.all(isDesktop ? 32 : 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151B2B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(isDesktop ? 24 : 16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(icon, color: color, size: isDesktop ? 64 : 40),
+          ),
+          SizedBox(height: isDesktop ? 24 : 16),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: isDesktop ? 24 : 18,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -509,20 +595,19 @@ class _ProjectsSection extends StatelessWidget {
           children: [
             _ProjectCard(
               title: 'App de Ecommerce',
-              description: 'Plataforma completa de ventas con pasarela de pagos integrada y panel de administración en tiempo real.',
+              description:
+                  'Plataforma completa de ventas con pasarela de pagos integrada y panel de administración en tiempo real.',
               tags: const ['Flutter', 'Firebase', 'PHP'],
               imageColor: Colors.blueAccent.withOpacity(0.2),
             ),
             _ProjectCard(
               title: 'Gestor de Tareas Pro',
-              description: 'Aplicación de productividad con soporte offline, notificaciones locales y sincronización en la nube.',
+              description:
+                  'Aplicación de productividad con soporte offline, notificaciones locales y sincronización en la nube.',
               tags: const ['Android', 'Swift', 'GitHub'],
               imageColor: Colors.purpleAccent.withOpacity(0.2),
             ),
-          ]
-              .animate(interval: 200.ms)
-              .fade(duration: 800.ms)
-              .slideX(begin: 0.1),
+          ].animate(interval: 200.ms).fade(duration: 800.ms).slideX(begin: 0.1),
         );
       },
     );
@@ -562,8 +647,8 @@ class _ProjectCardState extends State<_ProjectCard> {
           color: const Color(0xFF151B2B),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isHovered 
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.5) 
+            color: isHovered
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
                 : Colors.white.withOpacity(0.05),
             width: 2,
           ),
@@ -586,7 +671,8 @@ class _ProjectCardState extends State<_ProjectCard> {
                 child: Container(
                   color: widget.imageColor,
                   child: Center(
-                    child: Icon(Icons.image_outlined, size: 60, color: Colors.white.withOpacity(0.3)),
+                    child: Icon(Icons.image_outlined,
+                        size: 60, color: Colors.white.withOpacity(0.3)),
                   ),
                 ),
               ),
@@ -624,9 +710,13 @@ class _ProjectCardState extends State<_ProjectCard> {
                         runSpacing: 8,
                         children: widget.tags.map((tag) {
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -701,7 +791,8 @@ class _ContactInfo extends StatelessWidget {
       children: [
         const Text(
           '¿Tienes una idea en mente?',
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+              fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         const SizedBox(height: 16),
         const Text(
@@ -710,21 +801,21 @@ class _ContactInfo extends StatelessWidget {
         ),
         const SizedBox(height: 40),
         _ContactItem(
-          icon: Icons.email, 
+          icon: Icons.email,
           text: 'castealejandro13@gmail.com',
           url: 'mailto:castealejandro13@gmail.com',
         ),
         const SizedBox(height: 16),
         _ContactItem(
-          icon: Icons.phone, 
+          icon: Icons.phone,
           text: '+52 56-21-91-51-71',
           url: 'tel:+525621915171',
         ),
         const SizedBox(height: 16),
         _ContactItem(
-          icon: Icons.location_on, 
+          icon: Icons.location_on,
           text: 'México',
-        ), 
+        ),
       ],
     );
   }
@@ -764,7 +855,10 @@ class _ContactItem extends StatelessWidget {
             const SizedBox(width: 16),
             Text(
               text,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white),
             ),
           ],
         ),
@@ -792,9 +886,11 @@ class _ContactForm extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
-            child: const Text('Enviar Mensaje', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: const Text('Enviar Mensaje',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -843,9 +939,15 @@ class _Footer extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(onPressed: () {}, icon: const Icon(Icons.account_tree, color: Colors.white70)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.work, color: Colors.white70)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.code, color: Colors.white70)),
+              IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.account_tree, color: Colors.white70)),
+              IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.work, color: Colors.white70)),
+              IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.code, color: Colors.white70)),
             ],
           ),
           const SizedBox(height: 16),
