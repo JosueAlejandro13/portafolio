@@ -1,0 +1,887 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+void main() {
+  runApp(const PortfolioWeb());
+}
+
+class PortfolioWeb extends StatelessWidget {
+  const PortfolioWeb({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Mi Portafolio Web',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(useMaterial3: true).copyWith(
+        scaffoldBackgroundColor: const Color(0xFF0B0F19), // Dark sleek background
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF00F0FF), // Neon cyan
+          brightness: Brightness.dark,
+          primary: const Color(0xFF00F0FF),
+          secondary: const Color(0xFF7000FF), // Neon purple
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+      ),
+      home: const PortfolioHomePage(),
+    );
+  }
+}
+
+class PortfolioHomePage extends StatefulWidget {
+  const PortfolioHomePage({super.key});
+
+  @override
+  State<PortfolioHomePage> createState() => _PortfolioHomePageState();
+}
+
+class _PortfolioHomePageState extends State<PortfolioHomePage> {
+  final ScrollController _scrollController = ScrollController();
+
+  void _scrollToTop() {
+    _scrollController.animateTo(0, duration: const Duration(seconds: 1), curve: Curves.easeInOut);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 800;
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: ClipRRect(
+          child: AppBar(
+            backgroundColor: const Color(0xFF0B0F19).withOpacity(0.8),
+            elevation: 0,
+            title: Padding(
+              padding: EdgeInsets.only(left: isDesktop ? 40.0 : 0.0),
+              child: Text(
+                '<Dev/>',
+                style: GoogleFonts.firaCode(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ).animate().fade(duration: 800.ms).slideX(begin: -0.2),
+            ),
+            actions: isDesktop
+                ? [
+                    _NavBarItem(title: 'Inicio', onTap: _scrollToTop),
+                    _NavBarItem(title: 'Experiencia', onTap: () {}),
+                    _NavBarItem(title: 'Tecnologías', onTap: () {}),
+                    _NavBarItem(title: 'Proyectos', onTap: () {}),
+                    const SizedBox(width: 40),
+                  ]
+                : [],
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        child: Column(
+          children: [
+            _HeroSection(isDesktop: isDesktop),
+            const SizedBox(height: 100),
+            _SectionContainer(
+              title: 'Experiencia Profesional',
+              child: _ExperienceSection(isDesktop: isDesktop),
+            ),
+            const SizedBox(height: 120),
+            _SectionContainer(
+              title: 'Tecnologías que Domino',
+              child: _TechnologiesSection(isDesktop: isDesktop),
+            ),
+            const SizedBox(height: 120),
+            _SectionContainer(
+              title: 'Proyectos Destacados',
+              child: _ProjectsSection(isDesktop: isDesktop),
+            ),
+            const SizedBox(height: 120),
+            _SectionContainer(
+              title: 'Hablemos',
+              child: _ContactSection(isDesktop: isDesktop),
+            ),
+            const SizedBox(height: 80),
+            _Footer(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavBarItem extends StatelessWidget {
+  final String title;
+  final VoidCallback onTap;
+
+  const _NavBarItem({required this.title, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white70,
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionContainer extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _SectionContainer({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            )
+                .animate()
+                .fade(duration: 600.ms)
+                .slideY(begin: 0.2)
+                .shimmer(delay: 500.ms, duration: 1000.ms, color: Colors.white24),
+            const SizedBox(height: 8),
+            Container(
+              height: 4,
+              width: 60,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ).animate().scaleX(begin: 0, duration: 600.ms, curve: Curves.easeOut),
+            const SizedBox(height: 40),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroSection extends StatelessWidget {
+  final bool isDesktop;
+
+  const _HeroSection({required this.isDesktop});
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Column(
+      crossAxisAlignment: isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+          ),
+          child: Text(
+            'Disponible para nuevos proyectos',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
+        const SizedBox(height: 24),
+        Text(
+          'Construyendo\nExperiencias',
+          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            height: 1.1,
+            color: Colors.white,
+            fontSize: isDesktop ? 80 : 56,
+          ),
+          textAlign: isDesktop ? TextAlign.left : TextAlign.center,
+        ).animate().fade(delay: 400.ms).slideY(begin: 0.2),
+        const SizedBox(height: 16),
+        Text(
+          'Desarrollador de software especializado en Flutter, con experiencia en el diseño y desarrollo de aplicaciones móviles robustas, escalables y de alto rendimiento para Android e iOS.',
+          style: TextStyle(
+            fontSize: isDesktop ? 18 : 16,
+            fontWeight: FontWeight.w400,
+            color: Colors.white70,
+            height: 1.5,
+          ),
+          textAlign: isDesktop ? TextAlign.left : TextAlign.center,
+        ).animate().fade(delay: 600.ms).slideY(begin: 0.2),
+        const SizedBox(height: 32),
+        ElevatedButton.icon(
+          onPressed: () async {
+            const url = 'https://drive.google.com/file/d/11q1RIElbN9IzIITODxjgntz3cA7zrjlu/view?usp=sharing'; // Pega aquí tu link de Drive
+            final uri = Uri.parse(url);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri);
+            }
+          },
+          icon: const Icon(Icons.download_rounded),
+          label: const Text('Descargar CV', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 10,
+            shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+          ),
+        ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(begin: 1, end: 1.05, duration: 1000.ms),
+      ],
+    );
+
+    final avatar = Container(
+      width: isDesktop ? 400 : 280,
+      height: isDesktop ? 400 : 280,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: SweepGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+            Theme.of(context).colorScheme.primary,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            blurRadius: 50,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xFF0B0F19), // Fondo interno
+          ),
+          child: const Center(
+            child: Icon(Icons.person, size: 120, color: Colors.white54),
+            // TODO: Cambia este Icon por tu foto usando:
+            // child: ClipOval(child: Image.asset('assets/mi_foto.jpg', fit: BoxFit.cover)),
+          ),
+        ),
+      ),
+    ).animate().fade(delay: 800.ms).scale(begin: const Offset(0.8, 0.8)).shimmer(duration: 2000.ms);
+
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 800),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: isDesktop ? 120 : 160,
+            bottom: 40,
+          ),
+          child: isDesktop
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: content),
+                    const SizedBox(width: 40),
+                    avatar,
+                  ],
+                )
+              : Column(
+                  children: [
+                    avatar,
+                    const SizedBox(height: 60),
+                    content,
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExperienceSection extends StatelessWidget {
+  final bool isDesktop;
+
+  const _ExperienceSection({required this.isDesktop});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 24,
+      runSpacing: 24,
+      alignment: WrapAlignment.center,
+      children: [
+        _HoverCard(
+          child: _StatWidget(
+            number: '3+',
+            title: 'Años de\nExperiencia',
+            icon: Icons.timeline,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        _HoverCard(
+          child: _StatWidget(
+            number: '2',
+            title: 'Apps\nPublicadas',
+            icon: Icons.rocket_launch,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+        ),
+        _HoverCard(
+          child: _StatWidget(
+            number: '1',
+            title: 'Librería en\npub.dev',
+            icon: Icons.library_books,
+            color: Colors.pinkAccent,
+          ),
+        ),
+      ]
+          .animate(interval: 200.ms)
+          .fade(duration: 600.ms)
+          .slideY(begin: 0.2, curve: Curves.easeOut),
+    );
+  }
+}
+
+class _StatWidget extends StatelessWidget {
+  final String number;
+  final String title;
+  final IconData icon;
+  final Color color;
+
+  const _StatWidget({
+    required this.number,
+    required this.title,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151B2B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: color, size: 32),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            number,
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TechnologiesSection extends StatelessWidget {
+  final bool isDesktop;
+
+  const _TechnologiesSection({required this.isDesktop});
+
+  @override
+  Widget build(BuildContext context) {
+    final techList = [
+      {'name': 'Flutter', 'icon': Icons.flutter_dash, 'color': Colors.lightBlue},
+      {'name': 'Dart', 'icon': Icons.code, 'color': Colors.blueAccent},
+      {'name': 'Firebase', 'icon': Icons.local_fire_department, 'color': Colors.orange},
+      {'name': 'PHP', 'icon': Icons.php, 'color': Colors.indigoAccent},
+      {'name': 'Android', 'icon': Icons.android, 'color': Colors.green},
+      {'name': 'Swift', 'icon': Icons.apple, 'color': Colors.orangeAccent},
+      {'name': 'GitHub', 'icon': Icons.account_tree, 'color': Colors.white},
+    ];
+
+    return Wrap(
+      spacing: 20,
+      runSpacing: 20,
+      alignment: WrapAlignment.center,
+      children: techList.map((tech) {
+        return _HoverCard(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151B2B),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(tech['icon'] as IconData, color: tech['color'] as Color, size: 28),
+                const SizedBox(width: 12),
+                Text(
+                  tech['name'] as String,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList()
+          .animate(interval: 100.ms)
+          .fade(duration: 500.ms)
+          .scale(curve: Curves.easeOutBack),
+    );
+  }
+}
+
+class _ProjectsSection extends StatelessWidget {
+  final bool isDesktop;
+
+  const _ProjectsSection({required this.isDesktop});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = isDesktop ? 2 : 1;
+        final childAspectRatio = isDesktop ? 1.5 : 1.2;
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 24,
+          mainAxisSpacing: 24,
+          childAspectRatio: childAspectRatio,
+          children: [
+            _ProjectCard(
+              title: 'App de Ecommerce',
+              description: 'Plataforma completa de ventas con pasarela de pagos integrada y panel de administración en tiempo real.',
+              tags: const ['Flutter', 'Firebase', 'PHP'],
+              imageColor: Colors.blueAccent.withOpacity(0.2),
+            ),
+            _ProjectCard(
+              title: 'Gestor de Tareas Pro',
+              description: 'Aplicación de productividad con soporte offline, notificaciones locales y sincronización en la nube.',
+              tags: const ['Android', 'Swift', 'GitHub'],
+              imageColor: Colors.purpleAccent.withOpacity(0.2),
+            ),
+          ]
+              .animate(interval: 200.ms)
+              .fade(duration: 800.ms)
+              .slideX(begin: 0.1),
+        );
+      },
+    );
+  }
+}
+
+class _ProjectCard extends StatefulWidget {
+  final String title;
+  final String description;
+  final List<String> tags;
+  final Color imageColor;
+
+  const _ProjectCard({
+    required this.title,
+    required this.description,
+    required this.tags,
+    required this.imageColor,
+  });
+
+  @override
+  State<_ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<_ProjectCard> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        transform: Matrix4.identity()..translate(0.0, isHovered ? -10.0 : 0.0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF151B2B),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isHovered 
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.5) 
+                : Colors.white.withOpacity(0.05),
+            width: 2,
+          ),
+          boxShadow: [
+            if (isHovered)
+              BoxShadow(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                blurRadius: 30,
+                spreadRadius: -5,
+              ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Container(
+                  color: widget.imageColor,
+                  child: Center(
+                    child: Icon(Icons.image_outlined, size: 60, color: Colors.white.withOpacity(0.3)),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: Text(
+                          widget.description,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white70,
+                            height: 1.5,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: widget.tags.map((tag) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              tag,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactSection extends StatelessWidget {
+  final bool isDesktop;
+
+  const _ContactSection({required this.isDesktop});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: isDesktop
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: _ContactInfo()),
+                const SizedBox(width: 40),
+                Expanded(child: _ContactForm()),
+              ],
+            )
+          : Column(
+              children: [
+                _ContactInfo(),
+                const SizedBox(height: 40),
+                _ContactForm(),
+              ],
+            ),
+    );
+  }
+}
+
+class _ContactInfo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '¿Tienes una idea en mente?',
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Estoy disponible para trabajos freelance o para unirme a un gran equipo. ¡Escríbeme y hablemos!',
+          style: TextStyle(fontSize: 18, color: Colors.white70, height: 1.5),
+        ),
+        const SizedBox(height: 40),
+        _ContactItem(
+          icon: Icons.email, 
+          text: 'castealejandro13@gmail.com',
+          url: 'mailto:castealejandro13@gmail.com',
+        ),
+        const SizedBox(height: 16),
+        _ContactItem(
+          icon: Icons.phone, 
+          text: '+52 56-21-91-51-71',
+          url: 'tel:+525621915171',
+        ),
+        const SizedBox(height: 16),
+        _ContactItem(
+          icon: Icons.location_on, 
+          text: 'México',
+        ), 
+      ],
+    );
+  }
+}
+
+class _ContactItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final String? url;
+
+  const _ContactItem({required this.icon, required this.text, this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        if (url != null) {
+          final uri = Uri.parse(url!);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactForm extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _CustomTextField(hintText: 'Tu Nombre'),
+        const SizedBox(height: 16),
+        _CustomTextField(hintText: 'Tu Correo'),
+        const SizedBox(height: 16),
+        _CustomTextField(hintText: 'Mensaje', maxLines: 4),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text('Enviar Mensaje', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomTextField extends StatelessWidget {
+  final String hintText;
+  final int maxLines;
+
+  const _CustomTextField({required this.hintText, this.maxLines = 1});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      maxLines: maxLines,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Colors.white38),
+        filled: true,
+        fillColor: const Color(0xFF151B2B),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+        ),
+      ),
+    );
+  }
+}
+
+class _Footer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      width: double.infinity,
+      color: Colors.black26,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(onPressed: () {}, icon: const Icon(Icons.account_tree, color: Colors.white70)),
+              IconButton(onPressed: () {}, icon: const Icon(Icons.work, color: Colors.white70)),
+              IconButton(onPressed: () {}, icon: const Icon(Icons.code, color: Colors.white70)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '© ${DateTime.now().year} Creado con Flutter y mucho ☕',
+            style: const TextStyle(color: Colors.white54, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Widget utilitario para efectos de Hover
+class _HoverCard extends StatefulWidget {
+  final Widget child;
+
+  const _HoverCard({required this.child});
+
+  @override
+  State<_HoverCard> createState() => _HoverCardState();
+}
+
+class _HoverCardState extends State<_HoverCard> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        transform: Matrix4.identity()..scale(isHovered ? 1.05 : 1.0),
+        child: widget.child,
+      ),
+    );
+  }
+}
