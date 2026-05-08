@@ -602,7 +602,7 @@ class _ProjectsSection extends StatelessWidget {
                   'Plataforma para trazado y seguimiento de rutas por GPS en tiempo real.',
               tags: const ['Flutter', 'Firebase', 'Android'],
               imageColor: Colors.blueAccent.withOpacity(0.2),
-              githubUrl: 'https://github.com/JosueAlejandro13',
+              isPrivate: true,
             ),
             _ProjectCard(
               title: 'Manager Web Platform',
@@ -610,7 +610,17 @@ class _ProjectsSection extends StatelessWidget {
                   'Plataforma administrativa web para gestión de datos de la aplicación Flutter.',
               tags: const ['PHP', 'JS', 'HTML', 'CSS'],
               imageColor: Colors.orangeAccent.withOpacity(0.2),
-              githubUrl: 'https://github.com/JosueAlejandro13',
+              isPrivate: true,
+              isMobileCarousel: false,
+              imagePaths: const [
+                'assets/manager/1.png',
+                'assets/manager/2.png',
+                'assets/manager/3.png',
+                'assets/manager/4.png',
+                'assets/manager/5.png',
+                'assets/manager/6.png',
+                'assets/manager/7.png',
+              ],
             ),
             _ProjectCard(
               title: 'Consultorio PH Web',
@@ -619,8 +629,15 @@ class _ProjectsSection extends StatelessWidget {
               tags: const ['HTML', 'CSS', 'JS', 'Tailwind'],
               imageColor: Colors.tealAccent.withOpacity(0.2),
               url: 'https://anaisph.github.io/',
-              imagePath: 'assets/Consultorio.png',
               githubUrl: 'https://github.com/AnaisPH/AnaisPH.github.io',
+              isMobileCarousel: false,
+              imagePaths: const [
+                'assets/consultorioweb/1.png',
+                'assets/consultorioweb/2.png',
+                'assets/consultorioweb/3.png',
+                'assets/consultorioweb/4.png',
+                'assets/consultorioweb/5.png',
+              ],
             ),
             _ProjectCard(
               title: 'App Consultorio PH',
@@ -673,6 +690,8 @@ class _ProjectCard extends StatefulWidget {
   final List<String>? imagePaths;
   final String? githubUrl;
   final bool showFlutterLogo;
+  final bool isMobileCarousel;
+  final bool isPrivate;
 
   const _ProjectCard({
     required this.title,
@@ -684,6 +703,8 @@ class _ProjectCard extends StatefulWidget {
     this.imagePaths,
     this.githubUrl,
     this.showFlutterLogo = false,
+    this.isMobileCarousel = true,
+    this.isPrivate = false,
   });
 
   @override
@@ -732,7 +753,10 @@ class _ProjectCardState extends State<_ProjectCard> {
                   color: widget.imageColor,
                   child:
                       widget.imagePaths != null && widget.imagePaths!.isNotEmpty
-                          ? _ImageCarousel(imagePaths: widget.imagePaths!)
+                          ? _ImageCarousel(
+                              imagePaths: widget.imagePaths!,
+                              isMobile: widget.isMobileCarousel,
+                            )
                           : widget.imagePath != null
                               ? Image.asset(
                                   widget.imagePath!,
@@ -815,7 +839,35 @@ class _ProjectCardState extends State<_ProjectCard> {
                                 }
                               },
                             ),
-                          if (widget.githubUrl != null) ...[
+                          if (widget.isPrivate) ...[
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.orange.withOpacity(0.3)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.lock_outline,
+                                      size: 14, color: Colors.orange),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Proyecto empresarial privado',
+                                    style: TextStyle(
+                                      color: Colors.orange,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (widget.githubUrl != null) ...[
                             const SizedBox(width: 12),
                             _ProjectActionButton(
                               icon: FontAwesomeIcons.github,
@@ -1092,8 +1144,12 @@ class _ProjectActionButton extends StatelessWidget {
 
 class _ImageCarousel extends StatefulWidget {
   final List<String> imagePaths;
+  final bool isMobile;
 
-  const _ImageCarousel({required this.imagePaths});
+  const _ImageCarousel({
+    required this.imagePaths,
+    this.isMobile = true,
+  });
 
   @override
   State<_ImageCarousel> createState() => _ImageCarouselState();
@@ -1146,14 +1202,20 @@ class _ImageCarouselState extends State<_ImageCarousel> {
           itemBuilder: (context, index) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 20.0, horizontal: 16.0),
+                padding: EdgeInsets.symmetric(
+                  vertical: widget.isMobile ? 20.0 : 12.0,
+                  horizontal: widget.isMobile ? 16.0 : 12.0,
+                ),
                 child: AspectRatio(
-                  aspectRatio: 9 / 19.5, // Aspect ratio de un smartphone
+                  aspectRatio: widget.isMobile
+                      ? 9 / 19.5
+                      : 1.6, // Aspect ratio de smartphone o laptop
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black, // Color del borde del dispositivo
-                      borderRadius: BorderRadius.circular(24),
+                      color: const Color(
+                          0xFF1A1A1A), // Color del borde del dispositivo
+                      borderRadius:
+                          BorderRadius.circular(widget.isMobile ? 24 : 12),
                       border: Border.all(color: Colors.grey.shade800, width: 4),
                       boxShadow: [
                         BoxShadow(
@@ -1163,12 +1225,42 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset(
-                        widget.imagePaths[index],
-                        fit: BoxFit.cover,
-                      ),
+                    child: Column(
+                      children: [
+                        if (!widget.isMobile)
+                          Container(
+                            height: 25,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade900,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(8)),
+                            ),
+                            child: Row(
+                              children: [
+                                _browserDot(Colors.red.shade400),
+                                const SizedBox(width: 6),
+                                _browserDot(Colors.orange.shade400),
+                                const SizedBox(width: 6),
+                                _browserDot(Colors.green.shade400),
+                              ],
+                            ),
+                          ),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                                widget.isMobile ? 20 : 0),
+                            child: Image.asset(
+                              widget.imagePaths[index],
+                              fit: widget.isMobile
+                                  ? BoxFit.cover
+                                  : BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1177,7 +1269,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
           },
         ),
         Positioned(
-          bottom: 12,
+          bottom: widget.isMobile ? 12 : 2,
           left: 0,
           right: 0,
           child: Row(
@@ -1186,12 +1278,14 @@ class _ImageCarouselState extends State<_ImageCarousel> {
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                height: 8,
-                width: _currentPage == index ? 24 : 8,
+                height: widget.isMobile ? 8 : 6,
+                width: _currentPage == index
+                    ? (widget.isMobile ? 24 : 18)
+                    : (widget.isMobile ? 8 : 6),
                 decoration: BoxDecoration(
                   color: _currentPage == index
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.white.withOpacity(0.5),
+                      : Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
               );
@@ -1199,6 +1293,17 @@ class _ImageCarouselState extends State<_ImageCarousel> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _browserDot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
     );
   }
 }
