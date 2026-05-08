@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -585,7 +586,7 @@ class _ProjectsSection extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = isDesktop ? 2 : 1;
-        final childAspectRatio = isDesktop ? 1.5 : 1.2;
+        final childAspectRatio = isDesktop ? 0.85 : 0.55;
 
         return GridView.count(
           crossAxisCount: crossAxisCount,
@@ -632,10 +633,28 @@ class _ProjectsSection extends StatelessWidget {
             _ProjectCard(
               title: 'App de Películas',
               description:
-                  'Aplicación móvil orientada a descubrir las tendencias actuales del cine mediante integración de servicios.',
+                  'Aplicación móvil orientada a descubrir las tendencias actuales del cine.',
               tags: const ['Flutter', 'API REST'],
               imageColor: Colors.purpleAccent.withOpacity(0.2),
               githubUrl: 'https://github.com/JosueAlejandro13/PruebaT',
+              imagePaths: const [
+                'assets/appPeliculas/1.jpeg',
+                'assets/appPeliculas/2.jpeg',
+                'assets/appPeliculas/3.jpeg',
+                'assets/appPeliculas/4.jpeg',
+                'assets/appPeliculas/5.jpeg',
+                'assets/appPeliculas/6.jpeg',
+                'assets/appPeliculas/7.jpeg',
+              ],
+            ),
+            _ProjectCard(
+              title: 'flutter_app_core_freezed',
+              description:
+                  'Un paquete ligero de Flutter que proporciona los bloques de construcción esenciales para aplicaciones en producción: cliente HTTP tipado, envoltorio funcional Result<T>, gestión de estado basada en BLoC y almacenamiento seguro de tokens.',
+              tags: const ['Flutter', 'Package', 'pub.dev'],
+              imageColor: Colors.indigo.withOpacity(0.2),
+              url: 'https://pub.dev/packages/flutter_app_core_freezed',
+              showFlutterLogo: true,
             ),
           ].animate(interval: 200.ms).fade(duration: 800.ms).slideX(begin: 0.1),
         );
@@ -651,7 +670,9 @@ class _ProjectCard extends StatefulWidget {
   final Color imageColor;
   final String? url;
   final String? imagePath;
+  final List<String>? imagePaths;
   final String? githubUrl;
+  final bool showFlutterLogo;
 
   const _ProjectCard({
     required this.title,
@@ -660,7 +681,9 @@ class _ProjectCard extends StatefulWidget {
     required this.imageColor,
     this.url,
     this.imagePath,
+    this.imagePaths,
     this.githubUrl,
+    this.showFlutterLogo = false,
   });
 
   @override
@@ -704,20 +727,26 @@ class _ProjectCardState extends State<_ProjectCard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                flex: 3,
+                flex: 5,
                 child: Container(
                   color: widget.imageColor,
-                  child: widget.imagePath != null
-                      ? Image.asset(
-                          widget.imagePath!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        )
-                      : Center(
-                          child: Icon(Icons.image_outlined,
-                              size: 60, color: Colors.white.withOpacity(0.3)),
-                        ),
+                  child:
+                      widget.imagePaths != null && widget.imagePaths!.isNotEmpty
+                          ? _ImageCarousel(imagePaths: widget.imagePaths!)
+                          : widget.imagePath != null
+                              ? Image.asset(
+                                  widget.imagePath!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                )
+                              : Center(
+                                  child: widget.showFlutterLogo
+                                      ? const FlutterLogo(size: 100)
+                                      : Icon(Icons.image_outlined,
+                                          size: 60,
+                                          color: Colors.white.withOpacity(0.3)),
+                                ),
                 ),
               ),
               Expanded(
@@ -736,17 +765,15 @@ class _ProjectCardState extends State<_ProjectCard> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Expanded(
-                        child: Text(
-                          widget.description,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white70,
-                            height: 1.5,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        widget.description,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                          height: 1.5,
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 16),
                       Wrap(
@@ -957,13 +984,16 @@ class _ContactForm extends StatelessWidget {
         ),
       )
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .moveY(begin: -15, end: 15, duration: 2.seconds, curve: Curves.easeInOut)
-          .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.05, 1.05), duration: 2.seconds, curve: Curves.easeInOut),
+          .moveY(
+              begin: -15, end: 15, duration: 2.seconds, curve: Curves.easeInOut)
+          .scale(
+              begin: const Offset(0.95, 0.95),
+              end: const Offset(1.05, 1.05),
+              duration: 2.seconds,
+              curve: Curves.easeInOut),
     );
   }
 }
-
-
 
 class _Footer extends StatelessWidget {
   @override
@@ -1042,17 +1072,133 @@ class _ProjectActionButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      label: Text(label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+        backgroundColor:
+            Theme.of(context).colorScheme.primary.withOpacity(0.15),
         foregroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+          side: BorderSide(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
         ),
       ),
+    );
+  }
+}
+
+class _ImageCarousel extends StatefulWidget {
+  final List<String> imagePaths;
+
+  const _ImageCarousel({required this.imagePaths});
+
+  @override
+  State<_ImageCarousel> createState() => _ImageCarouselState();
+}
+
+class _ImageCarouselState extends State<_ImageCarousel> {
+  late PageController _pageController;
+  int _currentPage = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _timer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+      if (_currentPage < widget.imagePaths.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: _pageController,
+          onPageChanged: (int page) {
+            setState(() {
+              _currentPage = page;
+            });
+          },
+          itemCount: widget.imagePaths.length,
+          itemBuilder: (context, index) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 20.0, horizontal: 16.0),
+                child: AspectRatio(
+                  aspectRatio: 9 / 19.5, // Aspect ratio de un smartphone
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black, // Color del borde del dispositivo
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade800, width: 4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        widget.imagePaths[index],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        Positioned(
+          bottom: 12,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(widget.imagePaths.length, (index) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 8,
+                width: _currentPage == index ? 24 : 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 }
