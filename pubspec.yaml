@@ -67,6 +67,7 @@ flutter:
     - assets/appPeliculas/
     - assets/manager/
     - assets/consultorioweb/
+    - assets/mark/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

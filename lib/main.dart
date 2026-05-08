@@ -603,6 +603,18 @@ class _ProjectsSection extends StatelessWidget {
               tags: const ['Flutter', 'Firebase', 'Android'],
               imageColor: Colors.blueAccent.withOpacity(0.2),
               isPrivate: true,
+              imagePaths: const [
+                'assets/mark/1.png',
+                'assets/mark/2.png',
+                'assets/mark/3.png',
+                'assets/mark/4.png',
+                'assets/mark/5.png',
+                'assets/mark/6.png',
+                'assets/mark/7.png',
+                'assets/mark/8.png',
+                'assets/mark/9.png',
+              ],
+              isMobileCarousel: true,
             ),
             _ProjectCard(
               title: 'Manager Web Platform',
