@@ -65,6 +65,12 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
   final GlobalKey _projectsKey = GlobalKey();
   final GlobalKey _contactKey = GlobalKey();
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheImage(const AssetImage('assets/avatar.png'), context);
+  }
+
   void _scrollToTop() {
     _scrollController.animateTo(0,
         duration: const Duration(milliseconds: 800), curve: Curves.easeInOut);
@@ -469,81 +475,47 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-class _GridBackground extends StatefulWidget {
+class _GridBackground extends StatelessWidget {
   const _GridBackground();
 
   @override
-  State<_GridBackground> createState() => _GridBackgroundState();
-}
-
-class _GridBackgroundState extends State<_GridBackground>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 6))
-          ..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) => CustomPaint(
-        painter: _GridPainter(_ctrl.value),
-      ),
+    return CustomPaint(
+      painter: const _GridPainter(),
     );
   }
 }
 
 class _GridPainter extends CustomPainter {
-  final double t;
-  _GridPainter(this.t);
+  const _GridPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1E2236).withValues(alpha: 0.4)
+      ..color = const Color(0xFF1E293B).withValues(alpha: 0.35)
       ..strokeWidth = 1;
 
     const cellSize = 60.0;
-    // Vertical lines
     for (double x = 0; x < size.width; x += cellSize) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
-    // Horizontal lines
     for (double y = 0; y < size.height; y += cellSize) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
 
-    // Animated dots at intersections
-    final dotPaint = Paint()..style = PaintingStyle.fill;
-    final random = math.Random(42);
-    int dotIndex = 0;
-    for (double x = 0; x < size.width; x += cellSize) {
-      for (double y = 0; y < size.height; y += cellSize) {
-        dotIndex++;
-        final phase = (random.nextDouble() + t) % 1.0;
-        final alpha = (math.sin(phase * 2 * math.pi) * 0.5 + 0.5);
-        if (alpha > 0.7) {
-          dotPaint.color = AppColors.primary.withValues(alpha: alpha * 0.6);
-          canvas.drawCircle(Offset(x, y), 2, dotPaint);
-        }
+    final dotPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = AppColors.primary.withValues(alpha: 0.35);
+
+    for (double x = cellSize; x < size.width; x += cellSize * 3) {
+      for (double y = cellSize; y < size.height; y += cellSize * 3) {
+        canvas.drawCircle(Offset(x, y), 2, dotPaint);
       }
     }
   }
 
   @override
-  bool shouldRepaint(_GridPainter old) => old.t != t;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ─── SECTION WRAPPER ──────────────────────────────────────────────────────────
