@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base href="$FLUTTER_BASE_HREF">
 
@@ -15,10 +16,17 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
   <title>Alejandro Hernández — Flutter Dev</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Preconnect and preload Google Fonts to eliminate runtime download delay -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <style>
     body {
@@ -63,10 +71,13 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="loader-container" id="loading">
     <div class="logo-badge">&lt;/&gt; Alejandro</div>
@@ -75,4 +86,5 @@
 
   <script src="flutter_bootstrap.js" async></script>
 </body>
+
 </html>
