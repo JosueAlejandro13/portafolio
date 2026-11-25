@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -30,21 +29,23 @@ void main() {
 class PortfolioWeb extends StatelessWidget {
   const PortfolioWeb({super.key});
 
+  static final ThemeData _theme = ThemeData.dark(useMaterial3: true).copyWith(
+    scaffoldBackgroundColor: AppColors.bg,
+    colorScheme: const ColorScheme.dark(
+      primary: AppColors.primary,
+      secondary: AppColors.accent,
+      surface: AppColors.bgCard,
+    ),
+    textTheme:
+        GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme),
+  );
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Alejandro Hernández — Dev',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: AppColors.bg,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          secondary: AppColors.accent,
-          surface: AppColors.bgCard,
-        ),
-        textTheme:
-            GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme),
-      ),
+      theme: _theme,
       home: const PortfolioHomePage(),
     );
   }
@@ -83,11 +84,39 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
   final GlobalKey _techKey = GlobalKey();
   final GlobalKey _projectsKey = GlobalKey();
   final GlobalKey _contactKey = GlobalKey();
+  bool _belowFoldReady = false;
+  bool _avatarPrecached = false;
+
+  static final ImageProvider _avatarProvider = ResizeImage.resizeIfNeeded(
+    480,
+    null,
+    const AssetImage('assets/avatar.png'),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    // Paint above-the-fold Hero first, then hydrate remaining sections
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_belowFoldReady) {
+        setState(() => _belowFoldReady = true);
+      }
+    });
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    precacheImage(const AssetImage('assets/avatar.png'), context);
+    if (!_avatarPrecached) {
+      _avatarPrecached = true;
+      precacheImage(_avatarProvider, context);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _scrollToTop() {
@@ -96,6 +125,13 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
   }
 
   void _scrollToSection(GlobalKey key) {
+    if (!_belowFoldReady) {
+      setState(() => _belowFoldReady = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToSection(key);
+      });
+      return;
+    }
     if (key.currentContext != null) {
       Scrollable.ensureVisible(
         key.currentContext!,
@@ -108,7 +144,7 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     final isDesktop = size.width > 900;
 
     return _PortfolioScrollScope(
@@ -161,36 +197,39 @@ class _PortfolioHomePageState extends State<PortfolioHomePage> {
                     isDesktop: isDesktop,
                     onProjectsTap: () => _scrollToSection(_projectsKey),
                   ),
-                  _SectionDivider(),
-                  _SectionWrapper(
-                    key: _experienceKey,
-                    label: 'TRAYECTORIA',
-                    title: 'Experiencia & Logros',
-                    child: _ExperienceSection(isDesktop: isDesktop),
-                  ),
-                  _SectionDivider(),
-                  _SectionWrapper(
-                    key: _techKey,
-                    label: 'STACK TÉCNICO',
-                    title: 'Tecnologías que Domino',
-                    child: _TechnologiesSection(isDesktop: isDesktop),
-                  ),
-                  _SectionDivider(),
-                  _SectionWrapper(
-                    key: _projectsKey,
-                    label: 'PORTAFOLIO',
-                    title: 'Proyectos Destacados',
-                    child: _ProjectsSection(isDesktop: isDesktop),
-                  ),
-                  _SectionDivider(),
-                  _SectionWrapper(
-                    key: _contactKey,
-                    label: 'CONTACTO',
-                    title: 'Hablemos',
-                    child: _ContactSection(isDesktop: isDesktop),
-                  ),
-                  const SizedBox(height: 80),
-                  const _Footer(),
+                  if (_belowFoldReady) ...[
+                    _SectionDivider(),
+                    _SectionWrapper(
+                      key: _experienceKey,
+                      label: 'TRAYECTORIA',
+                      title: 'Experiencia & Logros',
+                      child: _ExperienceSection(isDesktop: isDesktop),
+                    ),
+                    _SectionDivider(),
+                    _SectionWrapper(
+                      key: _techKey,
+                      label: 'STACK TÉCNICO',
+                      title: 'Tecnologías que Domino',
+                      child: _TechnologiesSection(isDesktop: isDesktop),
+                    ),
+                    _SectionDivider(),
+                    _SectionWrapper(
+                      key: _projectsKey,
+                      label: 'PORTAFOLIO',
+                      title: 'Proyectos Destacados',
+                      child: _ProjectsSection(isDesktop: isDesktop),
+                    ),
+                    _SectionDivider(),
+                    _SectionWrapper(
+                      key: _contactKey,
+                      label: 'CONTACTO',
+                      title: 'Hablemos',
+                      child: _ContactSection(isDesktop: isDesktop),
+                    ),
+                    const SizedBox(height: 80),
+                    const _Footer(),
+                  ] else
+                    const SizedBox(height: 600),
                 ],
               ),
             ),
@@ -400,7 +439,6 @@ class _NavItemState extends State<_NavItem> {
               fontWeight: FontWeight.w600,
               color:
                   _hovered ? AppColors.primaryLight : AppColors.textSecondary,
-              fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
             ),
             child: Text(widget.title),
           ),
@@ -561,10 +599,10 @@ class ScrollReveal extends StatefulWidget {
     super.key,
     required this.child,
     this.delay = Duration.zero,
-    this.duration = const Duration(milliseconds: 650),
-    this.slideOffset = 0.12,
+    this.duration = const Duration(milliseconds: 420),
+    this.slideOffset = 0.08,
     this.direction = Axis.vertical,
-    this.scale = true,
+    this.scale = false,
   });
 
   @override
@@ -576,10 +614,12 @@ class ScrollRevealState extends State<ScrollReveal>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
-  late Animation<double> _scaleAnim;
+  late Animation<double>? _scaleAnim;
 
   ScrollPosition? _scrollPosition;
   Timer? _delayTimer;
+  double _screenHeight = 900;
+  bool _hasRevealed = false;
 
   @override
   void initState() {
@@ -592,10 +632,9 @@ class ScrollRevealState extends State<ScrollReveal>
     final curve = CurvedAnimation(
       parent: _animController,
       curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
     );
 
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(curve);
+    _fadeAnim = curve;
 
     final beginOffset = widget.direction == Axis.vertical
         ? Offset(0.0, widget.slideOffset)
@@ -604,14 +643,20 @@ class ScrollRevealState extends State<ScrollReveal>
         Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(curve);
 
     _scaleAnim = widget.scale
-        ? Tween<double>(begin: 0.94, end: 1.0).animate(curve)
-        : const AlwaysStoppedAnimation(1.0);
+        ? Tween<double>(begin: 0.96, end: 1.0).animate(curve)
+        : null;
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _initScrollListener());
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _screenHeight = MediaQuery.sizeOf(context).height;
+  }
+
   void _initScrollListener() {
-    if (!mounted) return;
+    if (!mounted || _hasRevealed) return;
     try {
       final scopeController = _PortfolioScrollScope.of(context);
       if (scopeController != null && scopeController.hasClients) {
@@ -636,45 +681,35 @@ class ScrollRevealState extends State<ScrollReveal>
         _scrollPosition?.addListener(_checkVisibility);
         _checkVisibility();
       } else {
-        _animController.forward();
+        _reveal();
       }
     } catch (_) {
+      _reveal();
+    }
+  }
+
+  void _reveal() {
+    if (_hasRevealed || !mounted) return;
+    _hasRevealed = true;
+    _scrollPosition?.removeListener(_checkVisibility);
+    if (widget.delay == Duration.zero) {
       _animController.forward();
+    } else {
+      _delayTimer?.cancel();
+      _delayTimer = Timer(widget.delay, () {
+        if (mounted) _animController.forward();
+      });
     }
   }
 
   void _checkVisibility() {
-    if (!mounted) return;
+    if (!mounted || _hasRevealed) return;
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.hasSize) return;
 
-    final position = renderBox.localToGlobal(Offset.zero);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final itemTop = position.dy;
-
-    // Visible on screen or above screen
-    final isVisibleOrAbove = itemTop < screenHeight * 0.92;
-    // Displaced completely below screen when scrolling up
-    final isBelowScreen = itemTop > screenHeight * 0.98;
-
-    if (isVisibleOrAbove) {
-      if (_animController.status != AnimationStatus.forward &&
-          _animController.status != AnimationStatus.completed) {
-        if (widget.delay == Duration.zero) {
-          _animController.forward();
-        } else {
-          _delayTimer?.cancel();
-          _delayTimer = Timer(widget.delay, () {
-            if (mounted) _animController.forward();
-          });
-        }
-      }
-    } else if (isBelowScreen) {
-      if (_animController.status != AnimationStatus.reverse &&
-          _animController.status != AnimationStatus.dismissed) {
-        _delayTimer?.cancel();
-        _animController.reverse();
-      }
+    final itemTop = renderBox.localToGlobal(Offset.zero).dy;
+    if (itemTop < _screenHeight * 0.95) {
+      _reveal();
     }
   }
 
@@ -688,23 +723,19 @@ class ScrollRevealState extends State<ScrollReveal>
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _animController,
-        builder: (context, child) {
-          return Opacity(
-            opacity: _fadeAnim.value,
-            child: FractionalTranslation(
-              translation: _slideAnim.value,
-              child: Transform.scale(
-                scale: _scaleAnim.value,
-                child: child,
-              ),
-            ),
-          );
-        },
-        child: widget.child,
-      ),
+    Widget current = SlideTransition(
+      position: _slideAnim,
+      child: widget.child,
+    );
+    if (_scaleAnim != null) {
+      current = ScaleTransition(
+        scale: _scaleAnim!,
+        child: current,
+      );
+    }
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: current,
     );
   }
 }
@@ -766,7 +797,7 @@ class _SectionWrapper extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize:
-                            MediaQuery.of(context).size.width > 600 ? 42 : 28,
+                            MediaQuery.sizeOf(context).width > 600 ? 42 : 28,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         height: 1.1,
@@ -839,17 +870,19 @@ class _HeroSection extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              RepaintBoundary(
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentGreen,
-                    shape: BoxShape.circle,
-                  ),
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scaleXY(begin: 0.8, end: 1.2, duration: 1.seconds),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGreen,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accentGreen.withValues(alpha: 0.6),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 8),
               const Text(
@@ -861,7 +894,7 @@ class _HeroSection extends StatelessWidget {
               ),
             ],
           ),
-        ).animate().fade(delay: 200.ms).slideY(begin: 0.3),
+        ).animate().fade(duration: 300.ms).slideY(begin: 0.15),
         const SizedBox(height: 28),
 
         // Name with gradient
@@ -874,14 +907,14 @@ class _HeroSection extends StatelessWidget {
           child: Text(
             'Alejandro\nHernández',
             style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               height: 1.05,
               color: Colors.white,
               fontSize: isDesktop ? 78 : 52,
             ),
             textAlign: isDesktop ? TextAlign.left : TextAlign.center,
           ),
-        ).animate().fade(delay: 350.ms).slideY(begin: 0.2),
+        ).animate().fade(delay: 80.ms, duration: 350.ms).slideY(begin: 0.12),
         const SizedBox(height: 12),
 
         // Subtitle with animated text
@@ -893,10 +926,10 @@ class _HeroSection extends StatelessWidget {
           ],
           style: GoogleFonts.firaCode(
             fontSize: isDesktop ? 22 : 18,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: AppColors.accent,
           ),
-        ).animate().fade(delay: 500.ms),
+        ).animate().fade(delay: 140.ms, duration: 300.ms),
         const SizedBox(height: 20),
 
         Text(
@@ -908,7 +941,7 @@ class _HeroSection extends StatelessWidget {
             height: 1.7,
           ),
           textAlign: isDesktop ? TextAlign.left : TextAlign.center,
-        ).animate().fade(delay: 600.ms).slideY(begin: 0.2),
+        ).animate().fade(delay: 180.ms, duration: 350.ms).slideY(begin: 0.12),
         const SizedBox(height: 40),
 
         Wrap(
@@ -933,7 +966,7 @@ class _HeroSection extends StatelessWidget {
               onTap: onProjectsTap ?? () {},
             ),
           ],
-        ).animate().fade(delay: 700.ms).slideY(begin: 0.2),
+        ).animate().fade(delay: 220.ms, duration: 350.ms).slideY(begin: 0.12),
         const SizedBox(height: 48),
 
         // Social links
@@ -953,7 +986,7 @@ class _HeroSection extends StatelessWidget {
             _SocialLink(
                 icon: Icons.email, url: 'mailto:castealejandro13@gmail.com'),
           ],
-        ).animate().fade(delay: 800.ms),
+        ).animate().fade(delay: 260.ms, duration: 300.ms),
       ],
     );
 
@@ -1033,12 +1066,8 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar>
             children: [
               // Rotating gradient ring isolated with RepaintBoundary
               RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _rotAnim,
-                  builder: (_, child) => Transform.rotate(
-                    angle: _rotAnim.value * 2 * math.pi,
-                    child: child,
-                  ),
+                child: RotationTransition(
+                  turns: _rotAnim,
                   child: Container(
                     width: size,
                     height: size,
@@ -1065,22 +1094,21 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar>
                   color: AppColors.bg,
                 ),
               ),
-              // Glow
+              // Zero-blur radial glow halo
               Container(
-                width: size - 20,
-                height: size - 20,
+                width: size + 24,
+                height: size + 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 60,
-                      spreadRadius: 10,
-                    ),
-                  ],
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.22),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
-              // Avatar image with cache dimensions for fast GPU rasterization
+              // Avatar image with matching precache cacheWidth
               ClipOval(
                 child: SizedBox(
                   width: size - 20,
@@ -1088,58 +1116,51 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar>
                   child: Image.asset(
                     'assets/avatar.png',
                     fit: BoxFit.cover,
-                    cacheWidth: 720,
-                    cacheHeight: 720,
+                    cacheWidth: 480,
                     gaplessPlayback: true,
                   ),
                 ),
               ),
-              // Floating badge isolated with RepaintBoundary
+              // Floating badge
               Positioned(
                 bottom: 10,
                 right: 10,
-                child: RepaintBoundary(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            blurRadius: 20)
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.flutter_dash,
-                            color: AppColors.accentCyan, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Flutter Dev',
-                          style: GoogleFonts.firaCode(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          blurRadius: 16)
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.flutter_dash,
+                          color: AppColors.accentCyan, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Flutter Dev',
+                        style: GoogleFonts.firaCode(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                         ),
-                      ],
-                    ),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
-                      begin: -4,
-                      end: 4,
-                      duration: 2.seconds,
-                      curve: Curves.easeInOut),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    ).animate().fade(delay: 600.ms).scale(begin: const Offset(0.85, 0.85));
+    ).animate().fade(delay: 160.ms, duration: 350.ms).scale(begin: const Offset(0.92, 0.92));
   }
 }
 
@@ -1272,7 +1293,10 @@ class _TypewriterText extends StatefulWidget {
 class _TypewriterTextState extends State<_TypewriterText> {
   int _textIndex = 0;
   int _charCount = 0;
+  int _pauseTicks = 0;
+  int _blinkTicks = 0;
   bool _deleting = false;
+  bool _showCursor = true;
   Timer? _timer;
 
   @override
@@ -1284,25 +1308,40 @@ class _TypewriterTextState extends State<_TypewriterText> {
   void _startTimer() {
     _timer = Timer.periodic(const Duration(milliseconds: 80), (_) {
       if (!mounted) return;
-      setState(() {
-        final current = widget.texts[_textIndex];
-        if (!_deleting) {
-          if (_charCount < current.length) {
-            _charCount++;
-          } else {
-            Future.delayed(const Duration(milliseconds: 1500), () {
-              if (mounted) setState(() => _deleting = true);
-            });
-          }
-        } else {
-          if (_charCount > 0) {
-            _charCount--;
-          } else {
-            _deleting = false;
-            _textIndex = (_textIndex + 1) % widget.texts.length;
+      _blinkTicks++;
+      final toggleCursor = _blinkTicks % 6 == 0;
+      var textChanged = false;
+
+      final current = widget.texts[_textIndex];
+      if (_pauseTicks > 0) {
+        _pauseTicks--;
+        if (_pauseTicks == 0) {
+          _deleting = true;
+        }
+      } else if (!_deleting) {
+        if (_charCount < current.length) {
+          _charCount++;
+          textChanged = true;
+          if (_charCount == current.length) {
+            _pauseTicks = 18; // ~1.44s pause without spawning extra timers
           }
         }
-      });
+      } else {
+        if (_charCount > 0) {
+          _charCount--;
+          textChanged = true;
+        } else {
+          _deleting = false;
+          _textIndex = (_textIndex + 1) % widget.texts.length;
+          textChanged = true;
+        }
+      }
+
+      if (textChanged || toggleCursor) {
+        setState(() {
+          if (toggleCursor) _showCursor = !_showCursor;
+        });
+      }
     });
   }
 
@@ -1319,17 +1358,11 @@ class _TypewriterTextState extends State<_TypewriterText> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(display, style: widget.style),
-        AnimatedOpacity(
-          opacity: 1,
-          duration: 500.ms,
-          child: Container(
-            width: 2,
-            height: 28,
-            color: AppColors.accent,
-          ),
-        )
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .fade(duration: 500.ms),
+        Container(
+          width: 2,
+          height: 28,
+          color: _showCursor ? AppColors.accent : Colors.transparent,
+        ),
       ],
     );
   }
@@ -1454,78 +1487,71 @@ class _StatCardState extends State<_StatCard> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < 600;
     final cardWidth = isMobile ? (screenWidth - 68) / 2 : 220.0;
 
-    return RepaintBoundary(
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: AnimatedContainer(
-          duration: 250.ms,
-          width: cardWidth,
-          padding: EdgeInsets.all(isMobile ? 18 : 28),
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.bgCardLight : AppColors.bgCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: _hovered
-                  ? widget.data.color.withValues(alpha: 0.4)
-                  : AppColors.border,
-            ),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                        color: widget.data.color.withValues(alpha: 0.2),
-                        blurRadius: 30)
-                  ]
-                : [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10)
-                  ],
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: 220.ms,
+        width: cardWidth,
+        padding: EdgeInsets.all(isMobile ? 18 : 28),
+        decoration: BoxDecoration(
+          color: _hovered ? AppColors.bgCardLight : AppColors.bgCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _hovered
+                ? widget.data.color.withValues(alpha: 0.4)
+                : AppColors.border,
           ),
-          transform: Matrix4.translationValues(0, _hovered ? -6 : 0, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: widget.data.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child:
-                    Icon(widget.data.icon, color: widget.data.color, size: 26),
-              ),
-              const SizedBox(height: 20),
-              _AnimatedCounterText(
-                numberString: widget.data.number,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: isMobile ? 36 : 44,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.data.label,
-                style: TextStyle(
-                    fontSize: isMobile ? 12 : 14,
-                    color: AppColors.textSecondary,
-                    height: 1.4),
-              ),
-            ],
-          ),
+          boxShadow: _hovered
+              ? [
+                  BoxShadow(
+                      color: widget.data.color.withValues(alpha: 0.2),
+                      blurRadius: 24)
+                ]
+              : [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 10)
+                ],
         ),
-      ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
-            begin: widget.index % 2 == 0 ? -4 : 4,
-            end: widget.index % 2 == 0 ? 4 : -4,
-            duration: (2200 + widget.index * 300).ms,
-            curve: Curves.easeInOut,
-          ),
+        transform: Matrix4.translationValues(0, _hovered ? -6 : 0, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: widget.data.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child:
+                  Icon(widget.data.icon, color: widget.data.color, size: 26),
+            ),
+            const SizedBox(height: 20),
+            _AnimatedCounterText(
+              numberString: widget.data.number,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: isMobile ? 36 : 44,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.data.label,
+              style: TextStyle(
+                  fontSize: isMobile ? 12 : 14,
+                  color: AppColors.textSecondary,
+                  height: 1.4),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -2406,27 +2432,30 @@ class _ProjectsSection extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
-          childAspectRatio: isDesktop ? 0.8 : 0.6,
+          childAspectRatio: isDesktop ? 0.8 : 0.56,
           children: [
             _ProjectCard(
-              title: 'App Mark — Rutas GPS',
+              title: 'Mark v3',
               description:
-                  'Plataforma para trazado y seguimiento de rutas por GPS en tiempo real con notificaciones push y mapas interactivos.',
-              tags: const ['Flutter', 'Firebase', 'Android', 'GPS'],
+                  'App oficial de Caleni Telematics para rastreo GPS en tiempo real, rutas de reparto, levantamiento de pedidos y control de flotas.',
+              tags: const ['Flutter', 'Firebase', 'GPS', 'Flotas'],
               gradient: [
                 AppColors.primary.withValues(alpha: 0.2),
                 AppColors.accentCyan.withValues(alpha: 0.15)
               ],
               accentColor: AppColors.primary,
-              isPrivate: true,
+              androidUrl:
+                  'https://play.google.com/store/apps/details?id=com.caleni.appMarkV3',
+              iosComingSoon: true,
               imagePaths: const [
-                'assets/mark/1.png',
-                'assets/mark/2.png',
-                'assets/mark/3.png',
-                'assets/mark/4.png',
-                'assets/mark/5.png'
+                'assets/mark/1.jpg',
+                'assets/mark/2.jpg',
+                'assets/mark/3.jpg',
+                'assets/mark/4.jpg',
+                'assets/mark/5.jpg',
               ],
               isMobileCarousel: true,
+              isPromoShowcase: true,
             ),
             _ProjectCard(
               title: 'Manager Web Platform',
@@ -2534,14 +2563,25 @@ class _ProjectsSection extends StatelessWidget {
   }
 }
 
+Future<void> _launchExternalUrl(String rawUrl) async {
+  final uri = Uri.parse(rawUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
 class _ProjectCard extends StatefulWidget {
   final String title, description;
   final List<String> tags;
   final List<Color> gradient;
   final Color accentColor;
-  final String? url, githubUrl;
+  final String? url, githubUrl, androidUrl;
   final List<String>? imagePaths;
-  final bool showFlutterLogo, isMobileCarousel, isPrivate;
+  final bool showFlutterLogo,
+      isMobileCarousel,
+      isPromoShowcase,
+      isPrivate,
+      iosComingSoon;
 
   const _ProjectCard({
     required this.title,
@@ -2551,10 +2591,13 @@ class _ProjectCard extends StatefulWidget {
     required this.accentColor,
     this.url,
     this.githubUrl,
+    this.androidUrl,
     this.imagePaths,
     this.showFlutterLogo = false,
     this.isMobileCarousel = true,
+    this.isPromoShowcase = false,
     this.isPrivate = false,
+    this.iosComingSoon = false,
   });
 
   @override
@@ -2616,7 +2659,9 @@ class _ProjectCardState extends State<_ProjectCard> {
                           widget.imagePaths!.isNotEmpty
                       ? _ImageCarousel(
                           imagePaths: widget.imagePaths!,
-                          isMobile: widget.isMobileCarousel)
+                          isMobile: widget.isMobileCarousel,
+                          isPromoShowcase: widget.isPromoShowcase,
+                        )
                       : Center(
                           child: widget.showFlutterLogo
                               ? Column(
@@ -2684,29 +2729,44 @@ class _ProjectCardState extends State<_ProjectCard> {
                           style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary,
-                              height: 1.6),
+                              height: 1.5),
                           overflow: TextOverflow.ellipsis,
-                          maxLines: 3,
+                          maxLines: 4,
                         ),
                       ),
                       const SizedBox(height: 12),
                       // Action buttons
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
+                          if (widget.androidUrl != null)
+                            Tooltip(
+                              message: 'Descargar en Google Play (Android)',
+                              child: _SmallActionButton(
+                                icon: FontAwesomeIcons.googlePlay,
+                                label: 'Android',
+                                color: AppColors.accentGreen,
+                                onTap: () =>
+                                    _launchExternalUrl(widget.androidUrl!),
+                                isFa: true,
+                              ),
+                            ),
+                          if (widget.iosComingSoon)
+                            const _ComingSoonStoreBadge(
+                              icon: FontAwesomeIcons.apple,
+                              label: 'iOS · Próximamente',
+                              tooltip: 'Disponible próximamente en App Store',
+                            ),
                           if (widget.url != null)
                             _SmallActionButton(
                               icon: Icons.open_in_new_rounded,
                               label: 'Ver',
                               color: widget.accentColor,
-                              onTap: () async {
-                                final uri = Uri.parse(widget.url!);
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri);
-                                }
-                              },
+                              onTap: () => _launchExternalUrl(widget.url!),
                             ),
-                          if (widget.isPrivate) ...[
-                            const SizedBox(width: 8),
+                          if (widget.isPrivate)
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
@@ -2729,22 +2789,16 @@ class _ProjectCardState extends State<_ProjectCard> {
                                           fontWeight: FontWeight.w700)),
                                 ],
                               ),
-                            ),
-                          ] else if (widget.githubUrl != null) ...[
-                            const SizedBox(width: 8),
+                            )
+                          else if (widget.githubUrl != null)
                             _SmallActionButton(
                               icon: FontAwesomeIcons.github,
                               label: 'GitHub',
                               color: widget.accentColor,
-                              onTap: () async {
-                                final uri = Uri.parse(widget.githubUrl!);
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri);
-                                }
-                              },
+                              onTap: () =>
+                                  _launchExternalUrl(widget.githubUrl!),
                               isFa: true,
                             ),
-                          ],
                         ],
                       ),
                     ],
@@ -2753,6 +2807,50 @@ class _ProjectCardState extends State<_ProjectCard> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ComingSoonStoreBadge extends StatelessWidget {
+  final FaIconData icon;
+  final String label;
+  final String tooltip;
+
+  const _ComingSoonStoreBadge({
+    required this.icon,
+    required this.label,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.textSecondary.withValues(alpha: 0.25),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(icon, size: 13, color: AppColors.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -3146,8 +3244,13 @@ class _Footer extends StatelessWidget {
 class _ImageCarousel extends StatefulWidget {
   final List<String> imagePaths;
   final bool isMobile;
+  final bool isPromoShowcase;
 
-  const _ImageCarousel({required this.imagePaths, this.isMobile = true});
+  const _ImageCarousel({
+    required this.imagePaths,
+    this.isMobile = true,
+    this.isPromoShowcase = false,
+  });
 
   @override
   State<_ImageCarousel> createState() => _ImageCarouselState();
@@ -3156,30 +3259,61 @@ class _ImageCarousel extends StatefulWidget {
 class _ImageCarouselState extends State<_ImageCarousel> {
   late PageController _pageController;
   int _currentPage = 0;
+  Timer? _startDelayTimer;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    if (widget.imagePaths.length <= 1) return;
     // Delay automatic transition until initial entrance animations complete
-    Future.delayed(const Duration(milliseconds: 3000), () {
+    _startDelayTimer = Timer(const Duration(milliseconds: 3000), () {
       if (!mounted) return;
       _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-        if (!mounted || !_pageController.hasClients) return;
-        if (_currentPage < widget.imagePaths.length - 1) {
-          _currentPage++;
-        } else {
-          _currentPage = 0;
+        if (!mounted || !_pageController.hasClients || !_isVisibleInViewport()) {
+          return;
         }
-        _pageController.animateToPage(_currentPage,
-            duration: 500.ms, curve: Curves.easeInOut);
+        final nextPage = (_currentPage + 1) % widget.imagePaths.length;
+        _goToPage(nextPage);
       });
     });
   }
 
+  bool _isVisibleInViewport() {
+    final ro = context.findRenderObject();
+    if (ro is! RenderBox || !ro.hasSize) return false;
+    final top = ro.localToGlobal(Offset.zero).dy;
+    final screenH = MediaQuery.sizeOf(context).height;
+    return top + ro.size.height > 0 && top < screenH;
+  }
+
+  void _goToPage(int index) {
+    if (!mounted || !_pageController.hasClients) return;
+    setState(() => _currentPage = index);
+    _pageController.animateToPage(
+      index,
+      duration: 500.ms,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _openPreview(BuildContext context, int initialIndex) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.85),
+      builder: (dialogContext) {
+        return _ImageLightboxDialog(
+          imagePaths: widget.imagePaths,
+          initialIndex: initialIndex,
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
+    _startDelayTimer?.cancel();
     _timer?.cancel();
     _pageController.dispose();
     super.dispose();
@@ -3196,70 +3330,150 @@ class _ImageCarouselState extends State<_ImageCarousel> {
           itemBuilder: (context, index) {
             return Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: widget.isMobile ? 20 : 12,
-                  horizontal: widget.isMobile ? 16 : 12,
-                ),
-                child: AspectRatio(
-                  aspectRatio: widget.isMobile ? 9 / 19.5 : 1.6,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A1A1A),
-                      borderRadius:
-                          BorderRadius.circular(widget.isMobile ? 24 : 12),
-                      border: Border.all(color: Colors.grey.shade800, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10))
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        if (!widget.isMobile)
-                          Container(
-                            height: 24,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade900,
-                              borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(8)),
+                padding: widget.isPromoShowcase
+                    ? const EdgeInsets.fromLTRB(16, 14, 16, 28)
+                    : EdgeInsets.symmetric(
+                        vertical: widget.isMobile ? 20 : 12,
+                        horizontal: widget.isMobile ? 16 : 12,
+                      ),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => _openPreview(context, index),
+                    child: widget.isPromoShowcase
+                        ? AspectRatio(
+                            aspectRatio: 9 / 16,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.35),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.16),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(14.5),
+                                child: Image.asset(
+                                  widget.imagePaths[index],
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  cacheWidth: 480,
+                                  gaplessPlayback: true,
+                                ),
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                _dot(Colors.red.shade400),
-                                const SizedBox(width: 5),
-                                _dot(Colors.orange.shade400),
-                                const SizedBox(width: 5),
-                                _dot(Colors.green.shade400),
-                              ],
+                          )
+                        : AspectRatio(
+                            aspectRatio: widget.isMobile ? 9 / 19.5 : 1.6,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1A1A1A),
+                                borderRadius: BorderRadius.circular(
+                                    widget.isMobile ? 24 : 12),
+                                border: Border.all(
+                                    color: Colors.grey.shade800, width: 4),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.5),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10))
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  if (!widget.isMobile)
+                                    Container(
+                                      height: 24,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade900,
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                                top: Radius.circular(8)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          _dot(Colors.red.shade400),
+                                          const SizedBox(width: 5),
+                                          _dot(Colors.orange.shade400),
+                                          const SizedBox(width: 5),
+                                          _dot(Colors.green.shade400),
+                                        ],
+                                      ),
+                                    ),
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                          widget.isMobile ? 20 : 0),
+                                      child: Image.asset(
+                                        widget.imagePaths[index],
+                                        fit: widget.isMobile
+                                            ? BoxFit.cover
+                                            : BoxFit.contain,
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        cacheWidth:
+                                            widget.isMobile ? 480 : 720,
+                                        gaplessPlayback: true,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(widget.isMobile ? 20 : 0),
-                            child: Image.asset(
-                              widget.imagePaths[index],
-                              fit: widget.isMobile
-                                  ? BoxFit.cover
-                                  : BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              cacheWidth: widget.isMobile ? 600 : 900,
-                              gaplessPlayback: true,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
             );
           },
         ),
+        if (widget.imagePaths.length > 1) ...[
+          Positioned(
+            left: 10,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: _CarouselArrowButton(
+                icon: Icons.chevron_left_rounded,
+                onTap: () => _goToPage(
+                  (_currentPage - 1 + widget.imagePaths.length) %
+                      widget.imagePaths.length,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 10,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: _CarouselArrowButton(
+                icon: Icons.chevron_right_rounded,
+                onTap: () => _goToPage(
+                  (_currentPage + 1) % widget.imagePaths.length,
+                ),
+              ),
+            ),
+          ),
+        ],
         // Dot indicators
         Positioned(
           bottom: widget.isMobile ? 10 : 4,
@@ -3268,20 +3482,26 @@ class _ImageCarouselState extends State<_ImageCarousel> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(widget.imagePaths.length, (i) {
-              return AnimatedContainer(
-                duration: 300.ms,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                height: 6,
-                width: _currentPage == i ? 20 : 6,
-                decoration: BoxDecoration(
-                  gradient: _currentPage == i
-                      ? const LinearGradient(
-                          colors: [AppColors.primary, AppColors.accent])
-                      : null,
-                  color: _currentPage == i
-                      ? null
-                      : Colors.white.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(3),
+              return GestureDetector(
+                onTap: () => _goToPage(i),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: AnimatedContainer(
+                    duration: 300.ms,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    height: 6,
+                    width: _currentPage == i ? 20 : 6,
+                    decoration: BoxDecoration(
+                      gradient: _currentPage == i
+                          ? const LinearGradient(
+                              colors: [AppColors.primary, AppColors.accent])
+                          : null,
+                      color: _currentPage == i
+                          ? null
+                          : Colors.white.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
                 ),
               );
             }),
@@ -3296,4 +3516,135 @@ class _ImageCarouselState extends State<_ImageCarousel> {
         height: 8,
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       );
+}
+
+class _CarouselArrowButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CarouselArrowButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.bg.withValues(alpha: 0.65),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+          ),
+          child: Icon(icon, color: AppColors.textPrimary, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageLightboxDialog extends StatefulWidget {
+  final List<String> imagePaths;
+  final int initialIndex;
+
+  const _ImageLightboxDialog({
+    required this.imagePaths,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ImageLightboxDialog> createState() => _ImageLightboxDialogState();
+}
+
+class _ImageLightboxDialogState extends State<_ImageLightboxDialog> {
+  late final PageController _controller;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _controller = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _jumpTo(int index) {
+    setState(() => _current = index);
+    _controller.animateToPage(
+      index,
+      duration: 300.ms,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 760),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            PageView.builder(
+              controller: _controller,
+              onPageChanged: (i) => setState(() => _current = i),
+              itemCount: widget.imagePaths.length,
+              itemBuilder: (context, index) {
+                return Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      widget.imagePaths[index],
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton.filled(
+                onPressed: () => Navigator.of(context).pop(),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.bgCard.withValues(alpha: 0.85),
+                ),
+                icon: const Icon(Icons.close_rounded,
+                    color: AppColors.textPrimary),
+              ),
+            ),
+            if (widget.imagePaths.length > 1) ...[
+              Positioned(
+                left: 8,
+                child: _CarouselArrowButton(
+                  icon: Icons.chevron_left_rounded,
+                  onTap: () => _jumpTo(
+                    (_current - 1 + widget.imagePaths.length) %
+                        widget.imagePaths.length,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 8,
+                child: _CarouselArrowButton(
+                  icon: Icons.chevron_right_rounded,
+                  onTap: () =>
+                      _jumpTo((_current + 1) % widget.imagePaths.length),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
